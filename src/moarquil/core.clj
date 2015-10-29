@@ -18,7 +18,7 @@
 
 (defn setup []
   (fill 0)
-  (smooth 8)
+  (smooth 4)
   (stroke 00))
 
 
@@ -50,7 +50,6 @@
                  :size [840 1200]
                  :setup setup
                  :draw draw
-                 :renderer :p3d;opengl
-                 )]
+                 :renderer :opengl)]
     (.setLocation (.frame thisapp) 0 0)
     (reset! app thisapp)))
