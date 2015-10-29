@@ -30,8 +30,21 @@
               (* r (Math/cos th))]}))))
 
 
+(def spheres
+  (let [max-pos 400
+        positions (->> (repeatedly 30 (partial rand-int max-pos))
+                       (map (partial + (/ max-pos (- 2))))
+                       (partition 3))]
+    (for [pos positions]
+      {:type :sphere
+       :radius (rand-int 30)
+       :value (rand-int 255)
+       :origin pos})))
+
+
 (defn content []
   (concat
+   spheres
    (for [r [20 50 400 800 1600]]
      {:type :line, :points (lissajeux-line r)})
    texts))

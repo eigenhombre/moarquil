@@ -18,7 +18,7 @@
 
 (defn setup []
   (fill 0)
-  (smooth 4)
+  (smooth 2)
   (stroke 00))
 
 
@@ -29,12 +29,22 @@
       (doseq [p (:points l)]
         (stroke-weight (min 0.1 (- (/ (last p) 300))))
         (apply line p))
+
       (= type_ :text)
       (apply (partial text (:txt l))
-             (:pos l)))))
+             (:pos l))
 
-
-(def objects (content))
+      (= type_ :sphere)
+      (do
+        (push-matrix)
+        (push-style)
+        (fill (:value l))
+        (stroke 0)
+        (sphere-detail 10)
+        (translate (:origin l))
+        (sphere (:radius l))
+        (pop-style)
+        (pop-matrix)))))
 
 
 (defn draw []
@@ -42,7 +52,7 @@
   (translate (/ (width) 2) (/ (height) 2) 0)
   (rotate-y (* (frame-count) 0.0005))
   (rotate-x (* (frame-count) -0.0025))
-  (render objects))
+  (render (content)))
 
 
 (defn -main []
