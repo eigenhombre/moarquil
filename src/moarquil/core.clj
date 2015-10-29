@@ -1,6 +1,6 @@
 (ns moarquil.core
   (:gen-class)
-  (:require [moarquil.geom :refer [content]]
+  (:require [moarquil.geom :refer [content reset-content!]]
             [quil.core :refer :all]
             [quil.helpers.drawing :refer [line-join-points]]))
 
@@ -55,11 +55,16 @@
   (render (content)))
 
 
+(defn key-press []
+  (reset-content!))
+
+
 (defn -main []
   (let [thisapp (quil.applet/applet
                  :size [840 1200]
                  :setup setup
                  :draw draw
+                 :key-typed key-press
                  :renderer :opengl)]
     (.setLocation (.frame thisapp) 0 0)
     (reset! app thisapp)))

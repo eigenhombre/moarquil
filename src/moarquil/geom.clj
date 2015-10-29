@@ -16,7 +16,7 @@
        [x y z]))))
 
 
-(def texts
+(defn texts* []
   (repeatedly
    300
    (fn []
@@ -30,7 +30,11 @@
               (* r (Math/cos th))]}))))
 
 
-(def spheres
+(def texts (atom (texts*)))
+(defn reset-texts! [] (reset! texts (texts*)))
+
+
+(defn spheres* []
   (let [max-pos 400
         positions (->> (repeatedly 30 (partial rand-int max-pos))
                        (map (partial + (/ max-pos (- 2))))
@@ -42,9 +46,18 @@
        :origin pos})))
 
 
+(def spheres (atom spheres*))
+(defn reset-spheres! [] (reset! spheres (spheres*)))
+
+
 (defn content []
   (concat
-   spheres
+   @spheres
    (for [r [20 50 400 800 1600]]
      {:type :line, :points (lissajeux-line r)})
-   texts))
+   @texts))
+
+
+(defn reset-content! []
+  (reset-spheres!)
+  (reset-texts!))
