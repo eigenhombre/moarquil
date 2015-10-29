@@ -46,7 +46,7 @@
        :origin pos})))
 
 
-(def spheres (atom spheres*))
+(def spheres (atom (spheres*)))
 (defn reset-spheres! [] (reset! spheres (spheres*)))
 
 
