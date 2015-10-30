@@ -35,8 +35,8 @@
 
 
 (defn spheres* []
-  (let [max-pos 400
-        positions (->> (repeatedly 30 (partial rand-int max-pos))
+  (let [max-pos 800
+        positions (->> (repeatedly 50 (partial rand-int max-pos))
                        (map (partial + (/ max-pos (- 2))))
                        (partition 3))]
     (for [pos positions]
