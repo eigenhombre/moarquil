@@ -34,16 +34,17 @@
   (pop-matrix))
 
 
-(defn- draw-ring [{:keys [pos r1 r2 dr]}]
+(defn- draw-ring [{:keys [pos r1 r2 dr rotx color]}]
   (push-matrix)
   (apply translate pos)
+  (rotate-x rotx)
   (push-style)
   (let [sides 60
         angle (/ (* Math/PI 2) sides)]
-    (doseq [r (range 200 350 3)]
+    (doseq [r (range r1 r2 dr)]
       (no-fill)
       (stroke-weight 2)
-      (stroke 200)
+      (stroke color)
       (begin-shape)
       (doseq [i (range (inc sides))]
         (vertex (* r (Math/cos (* i angle)))
@@ -54,7 +55,7 @@
   (pop-matrix))
 
 
-(defn- render [objects]
+(defn render [objects]
   (doseq [{type_ :type :as l} objects]
     (cond
       (= type_ :line)
@@ -76,8 +77,14 @@
 (defn draw []
   (background 250)
   (translate (/ (width) 2) (/ (height) 2) 0)
-  (rotate-y (* (frame-count) 0.0005))
-  (rotate-x (* (frame-count) -0.0025))
+  (let [theta (* (+ 10000 (frame-count)) -0.0025)
+        phi (* (frame-count) 0.0005)
+        r 1000]
+    (camera (* r (Math/cos phi) (Math/sin theta))
+            (* r (Math/sin phi) (Math/sin theta))
+            (* r (Math/cos theta))
+            0 0 0
+            0 1 1))
   (render (content)))
 
 
@@ -87,7 +94,7 @@
 
 (defn -main []
   (let [thisapp (quil.applet/applet
-                 :size [840 1200]
+                 :size [950 1200]
                  :setup setup
                  :draw draw
                  :key-typed key-press
