@@ -55,6 +55,11 @@
    @spheres
    (for [r [20 50 400 800 1600]]
      {:type :line, :points (lissajeux-line r)})
+   [{:type :ring
+     :pos [0 0 0]
+     :r1 200
+     :r2 350
+     :dr 3}]
    @texts))
 
 
