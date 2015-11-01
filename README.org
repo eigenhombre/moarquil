@@ -1,3 +1,8 @@
-Experiments in Quil and Component.
+[Quil](http://quil.info/) experiments with immersive "worlds." Work in
+progress.
 
-These aren't the droids you're looking for.
+<img src="http://41.media.tumblr.com/57656f6d85917d44cfdad2515210d008/tumblr_nx51rhR2WP1ukyr3io1_1280.png"/>
+
+More[screenshots shown here](http://parentheticalworlds.tumblr.com/).
+
+

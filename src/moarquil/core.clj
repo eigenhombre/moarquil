@@ -1,25 +1,42 @@
 (ns moarquil.core
   (:gen-class)
   (:require [moarquil.geom :refer [content reset-content!]]
-            [quil.core :refer :all]
-            [quil.helpers.drawing :refer [line-join-points]]))
+            [quil.core :refer :all]))
+
 
 
 (defonce app (atom nil))
 
 
-;; http://stackoverflow.com/questions/12545570/\
-;; how-to-destroy-processing-papplet-without-calling-exit
-;;(.destroy foo) ;; Sometimes kills REPL process
 (when @app
   (.setVisible (.frame @app) false)
   (reset! app nil))
 
 
+;; http://stackoverflow.com/questions/12545570/\
+;; how-to-destroy-processing-papplet-without-calling-exit
+;;(.destroy foo) ;; Sometimes kills REPL process
 (defn setup []
   (fill 0)
-  (smooth 4)
+  (smooth)
   (stroke 00))
+
+
+(defn- draw-planet [{:keys [r pos craters]}]
+  (push-matrix)
+  (push-style)
+  (fill 255)
+  (no-stroke)
+  (apply translate pos)
+  (sphere-detail 30)
+  (sphere r)
+  (pop-style)
+  (pop-matrix)
+
+  ;; Draw craters
+  (doseq [c craters]
+    (doseq [p c]
+      (apply point p))))
 
 
 (defn- draw-sphere [{:keys [value origin radius]}]
@@ -55,31 +72,45 @@
   (pop-matrix))
 
 
+(defn- draw-line [l]
+  (push-style)
+  (stroke 150)
+  (doseq [p (:points l)]
+        (stroke-weight (min 0.1 (- (/ (last p) 300))))
+        (apply line p))
+  (pop-style))
+
+
+(defn- draw-text [l]
+  (apply (partial text (:txt l))
+             (:pos l)))
+
+
 (defn render [objects]
   (doseq [{type_ :type :as l} objects]
     (cond
       (= type_ :line)
-      (doseq [p (:points l)]
-        (stroke-weight (min 0.1 (- (/ (last p) 300))))
-        (apply line p))
+      (draw-line l)
 
       (= type_ :text)
-      (apply (partial text (:txt l))
-             (:pos l))
+      (draw-text l)
 
       (= type_ :sphere)
       (draw-sphere l)
 
       (= type_ :ring)
-      (draw-ring l))))
+      (draw-ring l)
+
+      (= type_ :planet)
+      (draw-planet l))))
 
 
 (defn draw []
-  (background 250)
+  (background 220)
   (translate (/ (width) 2) (/ (height) 2) 0)
   (let [theta (* (+ 10000 (frame-count)) -0.0025)
         phi (* (frame-count) 0.0005)
-        r 1000]
+        r (+ 1000 (* 500 (Math/cos (* 0.01 (frame-count)))))]
     (camera (* r (Math/cos phi) (Math/sin theta))
             (* r (Math/sin phi) (Math/sin theta))
             (* r (Math/cos theta))
@@ -94,7 +125,7 @@
 
 (defn -main []
   (let [thisapp (quil.applet/applet
-                 :size [950 1200]
+                 :size [1600 1200]
                  :setup setup
                  :draw draw
                  :key-typed key-press
