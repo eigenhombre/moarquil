@@ -1,8 +1,8 @@
-[Quil](http://quil.info/) experiments with immersive "worlds." Work in
+[[http://quil.info][Quil]] experiments with immersive "worlds." Work in
 progress.
 
-<img src="http://41.media.tumblr.com/57656f6d85917d44cfdad2515210d008/tumblr_nx51rhR2WP1ukyr3io1_1280.png"/>
+[[http://41.media.tumblr.com/57656f6d85917d44cfdad2515210d008/tumblr_nx51rhR2WP1ukyr3io1_1280.png]]
 
-More[screenshots shown here](http://parentheticalworlds.tumblr.com/).
+More [[http://parentheticalworlds.tumblr.com/][screenshots shown here]].
 
 
