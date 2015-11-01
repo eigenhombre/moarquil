@@ -80,9 +80,9 @@
 
 
 (def ^:private to-render (atom {:spirals true
-                                :text false
+                                :text true
                                 :spheres true
-                                :planets false
+                                :planets true
                                 :rings true}))
 
 
