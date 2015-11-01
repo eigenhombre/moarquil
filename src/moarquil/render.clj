@@ -9,18 +9,18 @@
   (stroke 00))
 
 
-(def paused (atom false))
+(def ^:private paused (atom false))
 (defn toggle-paused [] (swap! paused not))
 
 
-(def frame-counter (atom 0))
+(def ^:private frame-counter (atom 0))
 (defn update-camera-positions []
   (while true
     (if-not @paused (swap! frame-counter inc))
     (Thread/sleep 1)))
 
 
-(defn- draw-planet [{:keys [r pos craters]}]
+(defn ^:private draw-planet [{:keys [r pos craters]}]
   (push-matrix)
   (push-style)
   (fill 255)
@@ -41,7 +41,7 @@
     (pop-style)))
 
 
-(defn- draw-sphere [{:keys [value origin radius]}]
+(defn ^:private draw-sphere [{:keys [value origin radius]}]
   (push-matrix)
   (push-style)
   (fill value)
@@ -53,7 +53,7 @@
   (pop-matrix))
 
 
-(defn- draw-ring [{:keys [pos r1 r2 dr rotx color points]}]
+(defn ^:private draw-ring [{:keys [pos r1 r2 dr rotx color points]}]
   (push-matrix)
   (apply translate pos)
   (rotate-x rotx)
@@ -64,7 +64,7 @@
   (pop-matrix))
 
 
-(defn- draw-spiral [l]
+(defn ^:private draw-spiral [l]
   (when @paused
     (push-style)
     (stroke 150)
@@ -74,7 +74,7 @@
     (pop-style)))
 
 
-(defn- draw-text [l]
+(defn ^:private draw-text [l]
   (apply (partial text (:txt l))
              (:pos l)))
 

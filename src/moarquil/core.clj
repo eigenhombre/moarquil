@@ -7,14 +7,12 @@
             [quil.core :refer :all]))
 
 
-
 (defonce app (atom nil))
 
 
 ;; Clear existing display (for REPLing):
 ;; http://stackoverflow.com/questions/12545570/\
 ;; how-to-destroy-processing-papplet-without-calling-exit
-;;(.destroy foo) ;; Sometimes kills REPL process
 (when @app
   (.setVisible (.frame @app) false)
   (reset! app nil))

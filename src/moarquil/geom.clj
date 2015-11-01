@@ -17,7 +17,7 @@
        [x y z]))))
 
 
-(defn texts* []
+(defn ^:private texts* []
   (repeatedly
    100
    (fn []
@@ -31,11 +31,11 @@
               (* r (Math/cos th))]}))))
 
 
-(def texts (atom (texts*)))
+(def ^:private texts (atom (texts*)))
 (defn reset-texts! [] (reset! texts (texts*)))
 
 
-(defn spheres* []
+(defn ^:private spheres* []
   (let [max-pos 800
         positions (->> (repeatedly 50 (partial rand-int max-pos))
                        (map (partial + (/ max-pos (- 2))))
@@ -47,11 +47,11 @@
        :origin pos})))
 
 
-(def spheres (atom (spheres*)))
+(def ^:private spheres (atom (spheres*)))
 (defn reset-spheres! [] (reset! spheres (spheres*)))
 
 
-(defn crater-points [planet-radius
+(defn ^:private crater-points [planet-radius
                      planet-pos
                      crater-radius]
   (let [[theta phi] [(rand PI) (rand (* 2 PI))] ;; crater angles
@@ -83,7 +83,7 @@
         (butlast (m/mmul txform v))))))
 
 
-(defn gen-planet []
+(defn ^:private gen-planet []
   (let [max-pos 1200
         radius (+ 100 (rand-int 100))
         pos [(- (rand-int max-pos) (/ max-pos 2))
@@ -96,15 +96,15 @@
     {:type :planet, :r radius, :pos pos, :craters craters}))
 
 
-(defn planets* []
+(defn ^:private planets* []
   (repeatedly (+ 4 (rand-int 5)) gen-planet))
 
 
-(def planets (atom (planets*)))
+(def ^:private planets (atom (planets*)))
 (defn reset-planets! [] (reset! planets (planets*)))
 
 
-(defn gen-ring [pos r1 r2 dr rotx color]
+(defn ^:private gen-ring [pos r1 r2 dr rotx color]
   (let [points
         (for [_ (range 10000)]
           (let [r (+ r1 (rand (- r2 r1)))
@@ -120,12 +120,12 @@
      :points points}))
 
 
-(defn rings* []
+(defn ^:private rings* []
   [(gen-ring [0 0 0] 200 350 3 0 180)
    (gen-ring [0 0 0] 700 900 10 (rand-int 90) 50)])
 
 
-(def rings (atom (rings*)))
+(def ^:private rings (atom (rings*)))
 (defn reset-rings! [] (reset! rings (rings*)))
 
 
