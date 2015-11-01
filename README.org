@@ -5,4 +5,7 @@ progress.
 
 More [[http://parentheticalworlds.tumblr.com/][screenshots shown here]].
 
+* License
+
+Copyright © 2015 John Jacobsen. See LICENSE.
 
