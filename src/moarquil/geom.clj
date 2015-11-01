@@ -89,7 +89,9 @@
         pos [(- (rand-int max-pos) (/ max-pos 2))
              (- (rand-int max-pos) (/ max-pos 2))
              (- (rand-int max-pos) (/ max-pos 2))]
-        craters (for [_ (range (Math/pow (rand-int 3) 10))]
+        min-craters 10
+        max-craters 200
+        craters (for [_ (range min-craters max-craters)]
                   (crater-points radius pos (rand 30)))]
     {:type :planet, :r radius, :pos pos, :craters craters}))
 
@@ -102,15 +104,25 @@
 (defn reset-planets! [] (reset! planets (planets*)))
 
 
+(defn gen-ring [pos r1 r2 dr rotx color]
+  (let [points
+        (for [_ (range 8000)]
+          (let [r (+ r1 (rand (- r2 r1)))
+                theta (rand (* 2 PI))]
+            [(* r (cos theta)), (* r (sin theta)), 0]))]
+    {:type :ring
+     :pos pos
+     :r1 r1
+     :r2 r2
+     :dr dr
+     :rotx rotx
+     :color color
+     :points points}))
+
+
 (defn rings* []
-  [{:type :ring, :pos [0 0 0], :r1 200, :r2 350, :dr 3, :rotx 0, :color 180}
-   {:type :ring
-    :pos [0 0 0]
-    :r1 700
-    :r2 900
-    :dr 10
-    :rotx (rand-int 90)
-    :color 50}])
+  [(gen-ring [0 0 0] 200 350 3 0 180)
+   (gen-ring [0 0 0] 700 900 10 (rand-int 90) 50)])
 
 
 (def rings (atom (rings*)))
@@ -124,7 +136,7 @@
             800
             1600
             ]]
-     {:type :line
+     {:type :spiral
       :points (lissajeux-line r)})
    @rings
    @planets
