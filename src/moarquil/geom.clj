@@ -74,7 +74,7 @@
         txform (m/mmul tm'
                        rz'
                        ry')]
-    (for [_ (range 30)]
+    (for [_ (range 100)]
       (let [eta (rand (* 2 PI))
             v (m/matrix [(* crater-radius (cos eta))
                          (* crater-radius (sin eta))
@@ -106,7 +106,7 @@
 
 (defn gen-ring [pos r1 r2 dr rotx color]
   (let [points
-        (for [_ (range 8000)]
+        (for [_ (range 10000)]
           (let [r (+ r1 (rand (- r2 r1)))
                 theta (rand (* 2 PI))]
             [(* r (cos theta)), (* r (sin theta)), 0]))]

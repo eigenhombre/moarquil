@@ -9,6 +9,17 @@
   (stroke 00))
 
 
+(def paused (atom false))
+(defn toggle-paused [] (swap! paused not))
+
+
+(def frame-counter (atom 0))
+(defn update-camera-positions []
+  (while true
+    (if-not @paused (swap! frame-counter inc))
+    (Thread/sleep 1)))
+
+
 (defn- draw-planet [{:keys [r pos craters]}]
   (push-matrix)
   (push-style)
@@ -21,9 +32,13 @@
   (pop-matrix)
 
   ;; Draw craters
-  (doseq [c craters]
-    (doseq [p c]
-      (apply point p))))
+  (when @paused
+    (push-style)
+    (stroke 80)
+    (doseq [c craters]
+      (doseq [p c]
+        (apply point p)))
+    (pop-style)))
 
 
 (defn- draw-sphere [{:keys [value origin radius]}]
@@ -50,12 +65,13 @@
 
 
 (defn- draw-spiral [l]
-  (push-style)
-  (stroke 150)
-  (doseq [p (:points l)]
-        (stroke-weight (min 0.1 (- (/ (last p) 300))))
-        (apply line p))
-  (pop-style))
+  (when @paused
+    (push-style)
+    (stroke 150)
+    (doseq [p (:points l)]
+      (stroke-weight (min 0.1 (- (/ (last p) 300))))
+      (apply line p))
+    (pop-style)))
 
 
 (defn- draw-text [l]
@@ -107,20 +123,6 @@
       (draw-planet l))))
 
 
-(defn draw []
-  (background 220)
-  (translate (/ (width) 2) (/ (height) 2) 0)
-  (let [theta (* (+ 10000 (frame-count)) -0.0025)
-        phi (* (frame-count) 0.0005)
-        r (+ 1000 (* 500 (Math/cos (* 0.01 (frame-count)))))]
-    (camera (* r (Math/cos phi) (Math/sin theta))
-            (* r (Math/sin phi) (Math/sin theta))
-            (* r (Math/cos theta))
-            0 0 0
-            0 1 1))
-  (render (content)))
-
-
 (defn key-press []
   (condp = (raw-key)
     \r (toggle-rings)
@@ -128,4 +130,19 @@
     \p (toggle-planets)
     \t (toggle-text)
     \q (toggle-spirals)
-    \space (reset-content!)))
+    \R (reset-content!)
+    \space (toggle-paused)))
+
+
+(defn draw []
+  (background 220)
+  (translate (/ (width) 2) (/ (height) 2) 0)
+  (let [theta (* (+ 10000 @frame-counter) -0.000025)
+        phi (* @frame-counter 0.000005)
+        r (+ 1000 (* 500 (Math/cos (* 0.0001 @frame-counter))))]
+    (camera (* r (Math/cos phi) (Math/sin theta))
+            (* r (Math/sin phi) (Math/sin theta))
+            (* r (Math/cos theta))
+            0 0 0
+            0 1 1))
+  (render (content)))
