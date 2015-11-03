@@ -9,14 +9,28 @@
   (stroke 00))
 
 
+(def ^:private dragging (atom false))
 (def ^:private paused (atom false))
 (defn toggle-paused [] (swap! paused not))
 
 
-(def ^:private frame-counter (atom 0))
+(def ^:private camera-positions (atom {:points-to [0 0 0]
+                                       :theta 0
+                                       :phi 0
+                                       :r 1000}))
+
+
 (defn update-camera-positions []
+  (when-not (or @paused @dragging)
+      (swap! camera-positions (fn [m]
+                                (-> m
+                                    (update :theta + 0.00002)
+                                    (update :phi + 0.0001))))))
+
+
+(defn update-camera-positions-continuously []
   (while true
-    (if-not @paused (swap! frame-counter inc))
+    (update-camera-positions)
     (Thread/sleep 1)))
 
 
@@ -32,7 +46,7 @@
   (pop-matrix)
 
   ;; Draw craters
-  (when @paused
+  (when (and @paused (not @dragging))
     (push-style)
     (stroke 80)
     (doseq [c craters]
@@ -65,7 +79,7 @@
 
 
 (defn ^:private draw-spiral [l]
-  (when @paused
+  (when (and @paused (not @dragging))
     (push-style)
     (stroke 150)
     (doseq [p (:points l)]
@@ -137,12 +151,28 @@
 (defn draw []
   (background 220)
   (translate (/ (width) 2) (/ (height) 2) 0)
-  (let [theta (* (+ 10000 @frame-counter) -0.000025)
-        phi (* @frame-counter 0.000005)
-        r (+ 1000 (* 500 (Math/cos (* 0.0001 @frame-counter))))]
+  (let [theta (:theta @camera-positions)
+        phi (:phi @camera-positions)
+        r (:r @camera-positions)]
     (camera (* r (Math/cos phi) (Math/sin theta))
             (* r (Math/sin phi) (Math/sin theta))
             (* r (Math/cos theta))
             0 0 0
             0 1 1))
   (render (content)))
+
+
+(defn mouse-dragged []
+  (reset! dragging true)
+  (let [delx (- (mouse-x)
+                (pmouse-x))
+        mdx (/ delx 3)
+        dely (- (pmouse-y)
+                (mouse-y))
+        mdy (/ dely 3)]
+    (swap! camera-positions update :phi - (radians mdx))
+    (swap! camera-positions update :theta + (radians mdy))))
+
+
+(defn mouse-pressed [] (reset! dragging true))
+(defn mouse-released [] (reset! dragging false))

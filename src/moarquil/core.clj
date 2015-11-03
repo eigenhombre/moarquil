@@ -1,9 +1,6 @@
 (ns moarquil.core
   (:gen-class)
-  (:require [moarquil.render :refer [setup
-                                     draw
-                                     key-press
-                                     update-camera-positions]]
+  (:require [moarquil.render :refer :all]
             [quil.core :refer :all]))
 
 
@@ -24,7 +21,10 @@
                  :setup setup
                  :draw draw
                  :key-typed key-press
+                 :mouse-dragged mouse-dragged
+                 :mouse-pressed mouse-pressed
+                 :mouse-released mouse-released
                  :renderer :opengl)]
     (.setLocation (.frame thisapp) 0 0)
-    (future (update-camera-positions))
+    (future (update-camera-positions-continuously))
     (reset! app thisapp)))
