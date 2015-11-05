@@ -176,3 +176,8 @@
 
 (defn mouse-pressed [] (reset! dragging true))
 (defn mouse-released [] (reset! dragging false))
+(defn mouse-wheel [amount]
+  (reset! dragging true)
+  (future (Thread/sleep 1000)
+          (reset! dragging false))
+  (swap! camera-positions update :r #(max 1 (+ % (* 3 amount)))))

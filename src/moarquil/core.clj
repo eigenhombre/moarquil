@@ -24,6 +24,7 @@
                  :mouse-dragged mouse-dragged
                  :mouse-pressed mouse-pressed
                  :mouse-released mouse-released
+                 :mouse-wheel mouse-wheel
                  :renderer :opengl)]
     (.setLocation (.frame thisapp) 0 0)
     (future (update-camera-positions-continuously))
