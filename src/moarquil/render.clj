@@ -1,5 +1,6 @@
 (ns moarquil.render
   (:require [moarquil.geom :refer [content reset-content!]]
+            [moarquil.util :refer :all]
             [quil.core :refer :all]))
 
 
@@ -35,57 +36,48 @@
 
 
 (defn ^:private draw-planet [{:keys [r pos craters]}]
-  (push-matrix)
-  (push-style)
-  (fill 255)
-  (no-stroke)
-  (apply translate pos)
-  (sphere-detail 30)
-  (sphere r)
-  (pop-style)
-  (pop-matrix)
+  (with-matrix
+    (with-style
+      (fill 255)
+      (no-stroke)
+      (apply translate pos)
+      (sphere-detail 30)
+      (sphere r)))
 
   ;; Draw craters
   (when (and @paused (not @dragging))
-    (push-style)
-    (stroke 80)
-    (doseq [c craters]
-      (doseq [p c]
-        (apply point p)))
-    (pop-style)))
+    (with-style
+      (stroke 80)
+      (doseq [c craters]
+        (doseq [p c]
+          (apply point p))))))
 
 
 (defn ^:private draw-sphere [{:keys [value origin radius]}]
-  (push-matrix)
-  (push-style)
-  (fill value)
-  (no-stroke)
-  (sphere-detail 15)
-  (translate origin)
-  (sphere radius)
-  (pop-style)
-  (pop-matrix))
+  (with-matrix
+    (with-style
+      (fill value)
+      (no-stroke)
+      (sphere-detail 15)
+      (translate origin)
+      (sphere radius))))
 
 
 (defn ^:private draw-ring [{:keys [pos r1 r2 dr rotx color points]}]
-  (push-matrix)
-  (apply translate pos)
-  (rotate-x rotx)
-  (push-style)
-  (doseq [p points]
-    (apply point p))
-  (pop-style)
-  (pop-matrix))
+  (with-matrix
+    (apply translate pos)
+    (rotate-x rotx)
+    (with-style
+      (doseq [p points]
+        (apply point p)))))
 
 
 (defn ^:private draw-spiral [l]
-  (when (and @paused (not @dragging))
-    (push-style)
+  (with-style
     (stroke 150)
     (doseq [p (:points l)]
       (stroke-weight (min 0.1 (- (/ (last p) 300))))
-      (apply line p))
-    (pop-style)))
+      (apply line p))))
 
 
 (defn ^:private draw-text [l]
@@ -96,6 +88,7 @@
 (def ^:private to-render (atom {:spirals true
                                 :text true
                                 :spheres true
+                                :cylinders true
                                 :planets true
                                 :rings true}))
 
@@ -107,15 +100,46 @@
 
 
 (deftoggle spirals)
+(deftoggle cylinders)
 (deftoggle text)
 (deftoggle spheres)
 (deftoggle planets)
 (deftoggle rings)
 
 
+(defn draw-cylinder [{:keys [pos r h rotx roty]}]
+  (with-matrix
+    (translate pos)
+    (rotate-x rotx)
+    (rotate-y roty)
+    (with-style
+      (fill 200)
+      (doseq [[phi1 phi2] (partition 2 1 (range 0 370 10))]
+        (let [phi1 (-> phi1 (* 2 PI) (/ 360))
+              phi2 (-> phi2 (* 2 PI) (/ 360))
+              x1 (* r (cos phi1))
+              y1 (* r (sin phi1))
+              x2 (* r (cos phi2))
+              y2 (* r (sin phi2))]
+          (stroke 180)
+          (with-shape
+            (vertex x1 y1 0)
+            (vertex x2 y2 0)
+            (vertex x2 y2 h)
+            (vertex x1 y1 h)
+            (vertex x1 y1 0))
+          (stroke 0)
+          (line x1 y1 0 x2 y2 0)
+          (line x1 y1 h x2 y2 h))))))
+
+
 (defn render [objects]
   (doseq [{type_ :type :as l} objects]
     (cond
+      (and (= type_ :cylinder)
+           (:cylinders @to-render))
+      (draw-cylinder l)
+
       (and (= type_ :spiral)
            (:spirals @to-render))
       (draw-spiral l)

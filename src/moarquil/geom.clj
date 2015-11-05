@@ -5,18 +5,6 @@
             [quil.helpers.drawing :refer [line-join-points]]))
 
 
-(defn ^:private lissajeux-line [radius]
-  (line-join-points
-   (for [t (map (partial * 0.05) (range 0 3610))]
-     (let [s (* t 100)
-           radian-s (radians s)
-           radian-t (radians t)
-           x (* radius  (cos radian-s) (sin radian-t))
-           y (* radius  (sin radian-s) (sin radian-t))
-           z (* radius (cos radian-t))]
-       [x y z]))))
-
-
 (defn ^:private texts* []
   (repeatedly
    100
@@ -32,9 +20,9 @@
 
 
 (def ^:private texts (atom (texts*)))
+
+
 (defn reset-texts! [] (reset! texts (texts*)))
-
-
 (defn ^:private spheres* []
   (let [max-pos 800
         positions (->> (repeatedly 50 (partial rand-int max-pos))
@@ -48,9 +36,9 @@
 
 
 (def ^:private spheres (atom (spheres*)))
+
+
 (defn reset-spheres! [] (reset! spheres (spheres*)))
-
-
 (defn ^:private crater-points [planet-radius
                      planet-pos
                      crater-radius]
@@ -101,9 +89,9 @@
 
 
 (def ^:private planets (atom (planets*)))
+
+
 (defn reset-planets! [] (reset! planets (planets*)))
-
-
 (defn ^:private gen-ring [pos r1 r2 dr rotx color]
   (let [points
         (for [_ (range 10000)]
@@ -126,18 +114,54 @@
 
 
 (def ^:private rings (atom (rings*)))
+
+
 (defn reset-rings! [] (reset! rings (rings*)))
+(defn ^:private cylinders* []
+  (for [_ (range 3)]
+    (let [max-pos 1600
+          pos [(- (rand-int max-pos) (/ max-pos 2))
+               (- (rand-int max-pos) (/ max-pos 2))
+               (- (rand-int max-pos) (/ max-pos 2))]]
+      {:type :cylinder
+       :pos pos
+       :rotx (rand 180)
+       :roty (rand 180)
+       :r (rand 10)
+       :h (rand 300)})))
+
+
+(def ^:private cylinders (atom (cylinders*)))
+(defn reset-cylinders! [] (reset! cylinders (cylinders*)))
+
+
+(defn ^:private lissajeux-line [radius]
+  (line-join-points
+   (for [t (map (partial * 0.05) (range 0 3610))]
+     (let [s (* t 100)
+           radian-s (radians s)
+           radian-t (radians t)
+           x (* radius  (cos radian-s) (sin radian-t))
+           y (* radius  (sin radian-s) (sin radian-t))
+           z (* radius (cos radian-t))]
+       [x y z]))))
+
+
+(def ^:private spirals
+  (for [r [40
+           100
+           400
+           800
+           1600]]
+    {:type :spiral
+     :points (lissajeux-line r)}))
 
 
 (defn content []
   (concat
    @spheres
-   (for [r [400
-            800
-            1600
-            ]]
-     {:type :spiral
-      :points (lissajeux-line r)})
+   spirals
+   @cylinders
    @rings
    @planets
    @texts))
@@ -146,4 +170,5 @@
 (defn reset-content! []
   (reset-spheres!)
   (reset-planets!)
+  (reset-cylinders!)
   (reset-texts!))
