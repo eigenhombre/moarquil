@@ -5,7 +5,7 @@
 
 (defn setup []
   (fill 0)
-  (smooth)
+  (smooth 8)
   (stroke 00))
 
 
