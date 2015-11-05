@@ -150,7 +150,6 @@
 
 (defn draw []
   (background 220)
-  (translate (/ (width) 2) (/ (height) 2) 0)
   (let [theta (:theta @camera-positions)
         phi (:phi @camera-positions)
         r (:r @camera-positions)]
