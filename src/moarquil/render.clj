@@ -25,8 +25,8 @@
   (when-not (or @paused @dragging)
       (swap! camera-positions (fn [m]
                                 (-> m
-                                    (update :theta + 0.00002)
-                                    (update :phi + 0.0001))))))
+                                    (update :theta + 0.0000002)
+                                    (update :phi + 0.000001))))))
 
 
 (defn update-camera-positions-continuously []
@@ -113,7 +113,7 @@
     (rotate-x rotx)
     (rotate-y roty)
     (with-style
-      (fill 200)
+      (fill 200 200 200 100)
       (doseq [[phi1 phi2] (partition 2 1 (range 0 370 10))]
         (let [phi1 (-> phi1 (* 2 PI) (/ 360))
               phi2 (-> phi2 (* 2 PI) (/ 360))
@@ -121,7 +121,7 @@
               y1 (* r (sin phi1))
               x2 (* r (cos phi2))
               y2 (* r (sin phi2))]
-          (stroke 180)
+          (stroke 180 180 180 50)
           (with-shape
             (vertex x1 y1 0)
             (vertex x2 y2 0)
