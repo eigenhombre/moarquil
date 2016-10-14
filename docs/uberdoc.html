@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8" content="text/html" http-equiv="Content-Type" /><meta content="" name="description" /><style type="text/css"></style><style type="text/css">.syntaxhighlighter{overflow:hidden !important;}</style><style type="text/css"></style><style type="text/css">html{margin:0;padding:0;}h1{margin:0;padding:0;}h2{margin:0;padding:0;}h3{margin:0;padding:0;}h4{margin:0;padding:0;}a{color:#261A3B;}a:visited{color:#261A3B;}</style><style type="text/css">.header{margin-top:30px;}h1.project-name{font-size:34px;display:inline;}h2.project-version{font-size:18px;margin-top:0;display:inline;margin-left:10px;}.toc-link{font-size:12px;margin-left:10px;color:#252519;text-decoration:none;}.toc-link:hover{color:#5050A6;}.toc h1{font-size:34px;margin:0;}.docs-header{border-bottom:dotted #aaa 1px;padding-bottom:10px;margin-bottom:25px;}.toc h1{font-size:24px;}.toc{border-bottom:solid #bbb 1px;margin-bottom:40px;}.toc ul{margin-left:20px;padding-left:0px;padding-top:0;margin-top:0;}.toc li{list-style-type:none;padding-left:0;}.dependencies{}.dependencies table{font-size:16px;width:99.99%;border:none;margin-left:20px;}.dependencies td{padding-right:20px;;white-space:nowrap;}.dependencies .dotted{width:99%;}.dependencies .dotted hr{border-right:none;color:transparent;background-color:transparent;noshade:noshade;border-left:none;border-top:none;margin-bottom:-6px;height:0;border-bottom:dotted #bbb 1px;}.dependencies .dep-version{text-align:right;}.plugins ul{margin-left:20px;padding-left:0px;padding-top:0;margin-top:0;}.plugins li{list-style-type:none;padding-left:0;}.header p{margin-left:20px;}</style><style type="text/css">#floating-toc{position:fixed;top:10px;right:20px;height:20px;overflow:hidden;text-align:right;}#floating-toc li{list-style-type:none;margin:0;padding:0;}</style><style type="text/css">body{margin:0;padding:0;font-family:'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;;font-size:16px;color:#252519;background-color:#F5F5FF;}h1{font-size:20px;margin-top:0;}h2{font-size:18px;}h3{font-size:16px;}a.anchor{text-decoration:none;color:#252519;}a.anchor:hover{color:#5050A6;}table{border-spacing:0;border-bottom:solid #ddd 1px;;margin-bottom:10px;}code{display:inline;}p{margin-top:8px;}tr{margin:0px;padding:0px;}td.docs{width:410px;max-width:410px;vertical-align:top;margin:0px;padding-left:55px;padding-right:20px;border:none;background-color:#FFF;}td.docs pre{font-size:12px;overflow:hidden;}td.codes{vertical-align:top;font-size:10pt;overflow:hidden;background-color:#F5F5FF;width:55%;border-left:solid #E5E5EE 1px;padding-left:20px;border:none;margin:0px;}td.spacer{padding-bottom:40px;}pre code{display:block;padding:4px;}code{background-color:ghostWhite;border:solid #DEDEDE 1px;padding-left:3px;padding-right:3px;font-size:14px;}.syntaxhighlighter code{font-size:13px;}.footer{text-align:center;}</style><script type="text/javascript"></script><script type="text/javascript"></script><script type="text/javascript"></script><script type="text/javascript"></script><title>moarquil -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/eigenhombre/moarquil">moarquil</a></h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br />
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr><tr><td class="dep-name">quil</td><td class="dotted"><hr /></td><td class="dep-version">2.3.0-SNAPSHOT</td></tr><tr><td class="dep-name">eigenhombre/namejen</td><td class="dotted"><hr /></td><td class="dep-version">0.1.11</td></tr><tr><td class="dep-name">net.mikera/core.matrix</td><td class="dotted"><hr /></td><td class="dep-version">0.43.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#moarquil.core">moarquil.core</a></li><li><a href="#moarquil.geom">moarquil.geom</a></li><li><a href="#moarquil.render">moarquil.render</a></li><li><a href="#moarquil.util">moarquil.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#moarquil.core" name="moarquil.core"><h1 class="project-name">moarquil.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>  Main namespace.</p>
+
+<p>  More about this project at <code>https://github.com/eigenhombre/moarquil</code>.</p>
+</td><td class="codes"><pre class="brush: clojure">(ns moarquil.core
+  (:gen-class)
+  (:require [moarquil.render :refer :all]
+            [quil.core :refer :all]))</pre></td></tr><tr><td class="docs"><p>Save our app in an atom so we can reset it (only used during
+REPL-driven development)</p>
+</td><td class="codes"><pre class="brush: clojure">(defonce app (atom nil))</pre></td></tr><tr><td class="docs"><p>  Main function, called when running <code>java -jar target/moarquil.jar</code></p>
+</td><td class="codes"><pre class="brush: clojure">(defn -main
+  []
+  (let [thisapp (quil.applet/applet
+                 :size [1600 1200]
+                 :setup setup
+                 :draw draw
+                 :key-typed key-press
+                 :mouse-dragged mouse-dragged
+                 :mouse-pressed mouse-pressed
+                 :mouse-released mouse-released
+                 :mouse-wheel mouse-wheel
+                 :renderer :opengl)]
+    (.setLocation (.frame thisapp) 0 0)
+    (future (update-camera-positions-continuously))
+    (reset! app thisapp)))</pre></td></tr><tr><td class="docs"><p><em>Tools for Developing at the REPL.</em></p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Stuff inside <code>comment</code> expressions is not executed, unless you
+explicitly evaluate it in your editor.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Clear existing display (for REPLing):
+http://stackoverflow.com/questions/12545570/\
+how-to-destroy-processing-papplet-without-calling-exit</p>
+</td><td class="codes"><pre class="brush: clojure">(comment
+  (do
+    (when @app
+      (.setVisible (.frame @app) false)
+      (reset! app nil))
+
+    (-main)))</pre></td></tr><tr><td class="docs"><p>Re-generate Marginalia documentation at will; normally one runs
+<code>lein marg</code>, but doing it at the REPL is much faster.</p>
+</td><td class="codes"><pre class="brush: clojure">(comment)
+(do
+  (require '[marginalia.core :refer [run-marginalia]])
+  (run-marginalia [&quot;src&quot;])
+  (clojure.java.shell/sh &quot;open&quot; &quot;docs/uberdoc.html&quot;))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#moarquil.geom" name="moarquil.geom"><h1 class="project-name">moarquil.geom</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns moarquil.geom
+  (:require [clojure.core.matrix :as m]
+            [namejen.names :refer [generic-name]]
+            [quil.core :refer :all]
+            [quil.helpers.drawing :refer [line-join-points]]))</pre></td></tr><tr><td class="docs"><p><em>Text Names</em></p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>  Generate a mysterious cloud of names distributed randomly throughout
+  a spherical volume, most of them close to origin (exponential
+  falloff).</p>
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private texts*
+  []
+  (repeatedly
+   100
+   (fn []
+     (let [r (* 300 (- (Math/log (rand))))
+           th (* (rand) Math/PI)
+           ph (* 2 (rand) Math/PI)]
+       {:type :text
+        :txt (generic-name)
+        :pos [(* r (Math/cos th) (Math/sin ph))
+              (* r (Math/sin th) (Math/sin ph))
+              (* r (Math/cos th))]}))))</pre></td></tr><tr><td class="docs"><p>Store state of names and allow it to be resettable</p>
+</td><td class="codes"><pre class="brush: clojure">(def ^:private texts (atom (texts*)))
+(defn reset-texts! [] (reset! texts (texts*)))</pre></td></tr><tr><td class="docs"><p><em>Spheres (small planets)</em></p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>  Generate spheres of different shades and sizes, distributed
+  throughout a large, cubic space.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private spheres*
+  []
+  (let [max-pos 800
+        positions (-&gt;&gt; (repeatedly 50 (partial rand-int max-pos))
+                       (map (partial + (/ max-pos (- 2))))
+                       (partition 3))]
+    (for [pos positions]
+      {:type :sphere
+       :radius (rand-int 30)
+       :value (rand-int 255)
+       :origin pos})))</pre></td></tr><tr><td class="docs"><p>Store state of spheres and allow it to be resettable</p>
+</td><td class="codes"><pre class="brush: clojure">(def ^:private spheres (atom (spheres*)))
+(defn reset-spheres! [] (reset! spheres (spheres*)))</pre></td></tr><tr><td class="docs"><p><em>(Large) Planets</em></p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>  Generate "craters" on a "planet", by drawing circles just
+  outside the surface of the sphere.</p>
+
+<p>  This is basically just a bunch of linear algebra to do the
+  appropriate translations and rotations.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private crater-points
+  [planet-radius
+   planet-pos
+   crater-radius]
+  (let [[theta phi] [(rand PI) (rand (* 2 PI))] ;; crater angles
+        [x y z] planet-pos
+        ;; Translate by postition of world:
+        tm' (m/matrix [[1 0 0 x]
+                       [0 1 0 y]
+                       [0 0 1 z]
+                       [0 0 0 1]])
+        ;; Rotate around z by phi:
+        rz' (m/matrix [[(cos phi) (- (sin phi)) 0 0]
+                       [(sin phi) (cos phi)     0 0]
+                       [0         0             1 0]
+                       [0         0             0 1]])
+        ;; Rotate around y by theta:
+        ry' (m/matrix [[(cos theta)     0 (sin theta) 0]
+                       [0               1 0           0]
+                       [(- (sin theta)) 0 (cos theta) 0]
+                       [0               0 0           1]])
+        txform (m/mmul tm'
+                       rz'
+                       ry')]
+    (for [_ (range 100)]
+      (let [eta (rand (* 2 PI))
+            v (m/matrix [(* crater-radius (cos eta))
+                         (* crater-radius (sin eta))
+                         planet-radius
+                         1])]
+        (butlast (m/mmul txform v))))))</pre></td></tr><tr><td class="docs"><p>  Generate planet object, including surface craters.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private gen-planet
+  []
+  (let [max-pos 1200
+        radius (+ 100 (rand-int 100))
+        pos [(- (rand-int max-pos) (/ max-pos 2))
+             (- (rand-int max-pos) (/ max-pos 2))
+             (- (rand-int max-pos) (/ max-pos 2))]
+        min-craters 10
+        max-craters 200
+        craters (for [_ (range min-craters max-craters)]
+                  (crater-points radius pos (rand 30)))]
+    {:type :planet, :r radius, :pos pos, :craters craters}))</pre></td></tr><tr><td class="docs"><p>Generate 4 to 8 planets</p>
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private planets*
+  []
+  (repeatedly (+ 4 (rand-int 5)) gen-planet))</pre></td></tr><tr><td class="docs"><p>Save planet state and allow it to be resettable</p>
+</td><td class="codes"><pre class="brush: clojure">(def ^:private planets (atom (planets*)))
+(defn reset-planets! [] (reset! planets (planets*)))</pre></td></tr><tr><td class="docs"><p><em>Rings (sort of like asteroid belts)</em></p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>  Generate a bunch of "rock" positions spread throughout a ring
+  shape.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private gen-ring
+  [pos r1 r2 dr rotx color]
+  (let [points
+        (for [_ (range 10000)]
+          (let [r (+ r1 (rand (- r2 r1)))
+                theta (rand (* 2 PI))]
+            [(* r (cos theta)), (* r (sin theta)), 0]))]
+    {:type :ring
+     :pos pos
+     :r1 r1
+     :r2 r2
+     :dr dr
+     :rotx rotx
+     :color color
+     :points points}))</pre></td></tr><tr><td class="docs"><p>Just two rings, for now.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private rings* []
+  [(gen-ring [0 0 0] 200 350 3 0 180)
+   (gen-ring [0 0 0] 700 900 10 (rand-int 90) 50)])</pre></td></tr><tr><td class="docs"><p>State and reset logic for rings</p>
+</td><td class="codes"><pre class="brush: clojure">(def ^:private rings (atom (rings*)))
+(defn reset-rings! [] (reset! rings (rings*)))</pre></td></tr><tr><td class="docs"><p><em>Cosmic Spirals</em></p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>  Generate spiral as a series of line segments with fixed radius on a
+  sphere but gradually changing zenith angle.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private gen-spiral
+  [radius]
+  (line-join-points
+   (for [t (map (partial * 0.05) (range 0 3610))]
+     (let [s (* t 100)
+           radian-s (radians s)
+           radian-t (radians t)
+           x (* radius  (cos radian-s) (sin radian-t))
+           y (* radius  (sin radian-s) (sin radian-t))
+           z (* radius (cos radian-t))]
+       [x y z]))))</pre></td></tr><tr><td class="docs"><p>Do five spirals of different radii.  Not resettable (since there is
+no randomness).</p>
+</td><td class="codes"><pre class="brush: clojure">(def ^:private spirals
+  (for [r [40
+           100
+           400
+           800
+           1600]]
+    {:type :spiral
+     :points (gen-spiral r)}))</pre></td></tr><tr><td class="docs"><p><em>Public functions, for rendering and resetting everything.</em></p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>  Fetch everything to render, from current state.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn content
+  []
+  (concat
+   @spheres
+   @rings
+   @planets
+   @texts
+   spirals))</pre></td></tr><tr><td class="docs"><p>  Reset everything that is resettable so the viewer sees a new
+  "universe."</p>
+</td><td class="codes"><pre class="brush: clojure">(defn reset-content!
+  []
+  (reset-spheres!)
+  (reset-planets!)
+  (reset-texts!))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#moarquil.render" name="moarquil.render"><h1 class="project-name">moarquil.render</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>  Functionality for rendering and UI.  Purely math/geometrical
+  functions live in <code>geom.clj</code>.</p>
+</td><td class="codes"><pre class="brush: clojure">(ns moarquil.render
+  (:require [moarquil.geom :refer [content reset-content!]]
+            [moarquil.util :refer [with-style with-shape with-matrix]]
+            [quil.core :refer :all]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn setup []
+  (fill 0)
+  (smooth 8)
+  (stroke 00))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:private dragging (atom false))
+(def ^:private paused (atom false))
+(defn toggle-paused [] (swap! paused not))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:private camera-positions (atom {:points-to [0 0 0]
+                                       :theta 0
+                                       :phi 0
+                                       :r 1000}))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:private velocity (atom [0.00002
+                               0.0001]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn change-velocities-fractionally [f]
+  (let [[vth vph] @velocity]
+    (reset! velocity [(* vth f) (* vph f)])))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn update-camera-positions []
+  (when-not (or @paused @dragging)
+    (swap! camera-positions (fn [m]
+                              (let [[vth vph] @velocity]
+                                (-&gt; m
+                                    (update :theta + vth)
+                                    (update :phi + vph)))))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn update-camera-positions-continuously []
+  (while true
+    (update-camera-positions)
+    (Thread/sleep 1)))</pre></td></tr><tr><td class="docs"><p>  Draw individual planet as a sphere in space.  Draw craters but only
+  if display is not updating, since drawing them is slow.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private draw-planet
+  [{:keys [r pos craters]}]
+  (with-matrix
+    (with-style
+      (fill 255)
+      (no-stroke)
+      (apply translate pos)
+      (sphere-detail 30)
+      (sphere r)))
+  (when (and @paused (not @dragging))
+    (with-style
+      (stroke 80)
+      (doseq [c craters]
+        (doseq [p c]
+          (apply point p))))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private draw-sphere [{:keys [value origin radius]}]
+  (with-matrix
+    (with-style
+      (fill value)
+      (no-stroke)
+      (sphere-detail 15)
+      (translate origin)
+      (sphere radius))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private draw-ring [{:keys [pos r1 r2 dr rotx color points]}]
+  (with-matrix
+    (apply translate pos)
+    (rotate-x rotx)
+    (with-style
+      (doseq [p points]
+        (apply point p)))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private draw-spiral [l]
+  (with-style
+    (stroke 150)
+    (doseq [p (:points l)]
+      (stroke-weight (min 0.1 (- (/ (last p) 300))))
+      (apply line p))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ^:private draw-text [l]
+  (apply (partial text (:txt l))
+             (:pos l)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:private to-render (atom {:spirals true
+                                :text true
+                                :spheres true
+                                :planets true
+                                :rings true}))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defmacro deftoggle [name]
+  (let [fn-name (-&gt;&gt; name (str &quot;toggle-&quot;) symbol)
+        kw (keyword name)]
+    `(defn ~fn-name [] (swap! to-render update ~kw not))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(deftoggle spirals)
+(deftoggle text)
+(deftoggle spheres)
+(deftoggle planets)
+(deftoggle rings)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn render [objects]
+  (doseq [{type_ :type :as l} objects]
+    (cond
+      (and (= type_ :spiral)
+           (:spirals @to-render))
+      (draw-spiral l)
+      (and (= type_ :text)
+           (:text @to-render))
+      (draw-text l)
+      (and (= type_ :sphere)
+           (:spheres @to-render))
+      (draw-sphere l)
+      (and (= type_ :ring)
+           (:rings @to-render))
+      (draw-ring l)
+      (and (= type_ :planet)
+           (:planets @to-render))
+      (draw-planet l))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn key-press []
+  (try
+    (condp = (raw-key)
+      \r (toggle-rings)
+      \s (toggle-spheres)
+      \p (toggle-planets)
+      \t (toggle-text)
+      \q (toggle-spirals)
+      \R (reset-content!)
+      \+ (change-velocities-fractionally 1.1)
+      \- (change-velocities-fractionally 0.9)
+      \space (toggle-paused)
+      (println &quot;Unknown key&quot;))
+    (catch Throwable t
+      (prn t))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn draw []
+  (background 220)
+  (let [theta (:theta @camera-positions)
+        phi (:phi @camera-positions)
+        r (:r @camera-positions)]
+    (camera (* r (Math/cos phi) (Math/sin theta))
+            (* r (Math/sin phi) (Math/sin theta))
+            (* r (Math/cos theta))
+            0 0 0
+            0 1 1))
+  (render (content)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn mouse-dragged []
+  (reset! dragging true)
+  (let [delx (- (mouse-x)
+                (pmouse-x))
+        mdx (/ delx 3)
+        dely (- (pmouse-y)
+                (mouse-y))
+        mdy (/ dely 3)]
+    (swap! camera-positions update :phi - (radians mdx))
+    (swap! camera-positions update :theta + (radians mdy))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn mouse-pressed [] (reset! dragging true))
+(defn mouse-released [] (reset! dragging false))
+(defn mouse-wheel [amount]
+  (reset! dragging true)
+  (future (Thread/sleep 1000)
+          (reset! dragging false))
+  (swap! camera-positions update :r #(max 1 (+ % (* 3 amount)))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#moarquil.util" name="moarquil.util"><h1 class="project-name">moarquil.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns moarquil.util
+  (:require [quil.core :refer :all]))</pre></td></tr><tr><td class="docs"><p>  Create a contextual macro[1] with setup and teardown.  The teardown
+  executes even if the body raises an exception.</p>
+
+<p>  [1] Macro-writing-macros hurt my brain.  This helps:</p>
+
+<p>  <code>http://hubpages.com/technology/Clojure-macro-writing-macros</code>.</p>
+
+<p>  See also:</p>
+
+<p>  <code>http://eigenhombre.com/macro-writing-macros.html</code></p>
+</td><td class="codes"><pre class="brush: clojure">(defmacro defcontext
+  [nom setup teardown]
+  `(defmacro ~(symbol (str &quot;with-&quot; nom))
+     [~'&amp; body#]
+     `(do
+        ~'~setup
+        (try
+          ~@body#
+          (finally
+            ~'~teardown)))))</pre></td></tr><tr><td class="docs"><p>The actual context macros, with specified setup and teardown steps.
+Example usage: <code>(with-style ...body... )</code>.</p>
+</td><td class="codes"><pre class="brush: clojure">(defcontext style (push-style) (pop-style))
+(defcontext shape (begin-shape) (end-shape))
+(defcontext matrix (push-matrix) (pop-matrix))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_moarquil.core">moarquil.core</li><li class="floating-toc-li" id="floating-toc_moarquil.geom">moarquil.geom</li><li class="floating-toc-li" id="floating-toc_moarquil.render">moarquil.render</li><li class="floating-toc-li" id="floating-toc_moarquil.util">moarquil.util</li></ul></div></div><script type="text/javascript"></script></body></html>

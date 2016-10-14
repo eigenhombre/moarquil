@@ -5,7 +5,15 @@
             [quil.helpers.drawing :refer [line-join-points]]))
 
 
-(defn ^:private texts* []
+;; <em>Text Names</em>
+
+(defn ^:private texts*
+  "
+  Generate a mysterious cloud of names distributed randomly throughout
+  a spherical volume, most of them close to origin (exponential
+  falloff).
+  "
+  []
   (repeatedly
    100
    (fn []
@@ -19,11 +27,18 @@
               (* r (Math/cos th))]}))))
 
 
+;; Store state of names and allow it to be resettable
 (def ^:private texts (atom (texts*)))
-
-
 (defn reset-texts! [] (reset! texts (texts*)))
-(defn ^:private spheres* []
+
+;; <em>Spheres (small planets)</em>
+
+(defn ^:private spheres*
+  "
+  Generate spheres of different shades and sizes, distributed
+  throughout a large, cubic space.
+  "
+  []
   (let [max-pos 800
         positions (->> (repeatedly 50 (partial rand-int max-pos))
                        (map (partial + (/ max-pos (- 2))))
@@ -35,13 +50,24 @@
        :origin pos})))
 
 
+;; Store state of spheres and allow it to be resettable
 (def ^:private spheres (atom (spheres*)))
-
-
 (defn reset-spheres! [] (reset! spheres (spheres*)))
-(defn ^:private crater-points [planet-radius
-                     planet-pos
-                     crater-radius]
+
+
+;; <em>(Large) Planets</em>
+
+(defn ^:private crater-points
+  "
+  Generate \"craters\" on a \"planet\", by drawing circles just
+  outside the surface of the sphere.
+
+  This is basically just a bunch of linear algebra to do the
+  appropriate translations and rotations.
+  "
+  [planet-radius
+   planet-pos
+   crater-radius]
   (let [[theta phi] [(rand PI) (rand (* 2 PI))] ;; crater angles
         [x y z] planet-pos
         ;; Translate by postition of world:
@@ -71,7 +97,11 @@
         (butlast (m/mmul txform v))))))
 
 
-(defn ^:private gen-planet []
+(defn ^:private gen-planet
+  "
+  Generate planet object, including surface craters.
+  "
+  []
   (let [max-pos 1200
         radius (+ 100 (rand-int 100))
         pos [(- (rand-int max-pos) (/ max-pos 2))
@@ -84,15 +114,25 @@
     {:type :planet, :r radius, :pos pos, :craters craters}))
 
 
-(defn ^:private planets* []
+(defn ^:private planets*
+  "Generate 4 to 8 planets"
+  []
   (repeatedly (+ 4 (rand-int 5)) gen-planet))
 
 
+;; Save planet state and allow it to be resettable
 (def ^:private planets (atom (planets*)))
-
-
 (defn reset-planets! [] (reset! planets (planets*)))
-(defn ^:private gen-ring [pos r1 r2 dr rotx color]
+
+
+;; <em>Rings (sort of like asteroid belts)</em>
+
+(defn ^:private gen-ring
+  "
+  Generate a bunch of \"rock\" positions spread throughout a ring
+  shape.
+  "
+  [pos r1 r2 dr rotx color]
   (let [points
         (for [_ (range 10000)]
           (let [r (+ r1 (rand (- r2 r1)))
@@ -108,34 +148,25 @@
      :points points}))
 
 
+;; Just two rings, for now.
 (defn ^:private rings* []
   [(gen-ring [0 0 0] 200 350 3 0 180)
    (gen-ring [0 0 0] 700 900 10 (rand-int 90) 50)])
 
 
+;; State and reset logic for rings
 (def ^:private rings (atom (rings*)))
-
-
 (defn reset-rings! [] (reset! rings (rings*)))
-(defn ^:private cylinders* []
-  (for [_ (range 3)]
-    (let [max-pos 1600
-          pos [(- (rand-int max-pos) (/ max-pos 2))
-               (- (rand-int max-pos) (/ max-pos 2))
-               (- (rand-int max-pos) (/ max-pos 2))]]
-      {:type :cylinder
-       :pos pos
-       :rotx (rand 180)
-       :roty (rand 180)
-       :r (rand 10)
-       :h (rand 300)})))
 
 
-(def ^:private cylinders (atom (cylinders*)))
-(defn reset-cylinders! [] (reset! cylinders (cylinders*)))
+;; <em>Cosmic Spirals</em>
 
-
-(defn ^:private lissajeux-line [radius]
+(defn ^:private gen-spiral
+  "
+  Generate spiral as a series of line segments with fixed radius on a
+  sphere but gradually changing zenith angle.
+  "
+  [radius]
   (line-join-points
    (for [t (map (partial * 0.05) (range 0 3610))]
      (let [s (* t 100)
@@ -147,6 +178,8 @@
        [x y z]))))
 
 
+;; Do five spirals of different radii.  Not resettable (since there is
+;; no randomness).
 (def ^:private spirals
   (for [r [40
            100
@@ -154,21 +187,30 @@
            800
            1600]]
     {:type :spiral
-     :points (lissajeux-line r)}))
+     :points (gen-spiral r)}))
 
 
-(defn content []
+;; <em>Public functions, for rendering and resetting everything.</em>
+
+(defn content
+  "
+  Fetch everything to render, from current state.
+  "
+  []
   (concat
    @spheres
-   spirals
-   @cylinders
    @rings
    @planets
-   @texts))
+   @texts
+   spirals))
 
 
-(defn reset-content! []
+(defn reset-content!
+  "
+  Reset everything that is resettable so the viewer sees a new
+  \"universe.\"
+  "
+  []
   (reset-spheres!)
   (reset-planets!)
-  (reset-cylinders!)
   (reset-texts!))

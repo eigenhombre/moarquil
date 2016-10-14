@@ -4,23 +4,16 @@
 
 (defmacro defcontext
   "
-  Create a contextual macro with setup and teardown.
+  Create a contextual macro[1] with setup and teardown.  The teardown
+  executes even if the body raises an exception.
 
-  Example:
+  [1] Macro-writing-macros hurt my brain.  This helps:
 
-  (defcontext foo (setup-expr) (teardown-expr))
+  `http://hubpages.com/technology/Clojure-macro-writing-macros`.
 
-  expands to
+  See also:
 
-  (defmacro with-foo [& body]
-    `(do
-       (setup-expr)
-       (try
-         ~@body
-         (finally
-           (teardown-expr)))))
-
-  Brain salve: http://hubpages.com/technology/Clojure-macro-writing-macros
+  `http://eigenhombre.com/macro-writing-macros.html`
   "
   [nom setup teardown]
   `(defmacro ~(symbol (str "with-" nom))
@@ -33,6 +26,8 @@
             ~'~teardown)))))
 
 
+;; The actual context macros, with specified setup and teardown steps.
+;; Example usage: `(with-style ...body... )`.
 (defcontext style (push-style) (pop-style))
 (defcontext shape (begin-shape) (end-shape))
 (defcontext matrix (push-matrix) (pop-matrix))

@@ -1,6 +1,10 @@
 (ns moarquil.render
+  "
+  Functionality for rendering and UI.  Purely math/geometrical
+  functions live in `geom.clj`.
+  "
   (:require [moarquil.geom :refer [content reset-content!]]
-            [moarquil.util :refer :all]
+            [moarquil.util :refer [with-style with-shape with-matrix]]
             [quil.core :refer :all]))
 
 
@@ -21,12 +25,22 @@
                                        :r 1000}))
 
 
+(def ^:private velocity (atom [0.00002
+                               0.0001]))
+
+
+(defn change-velocities-fractionally [f]
+  (let [[vth vph] @velocity]
+    (reset! velocity [(* vth f) (* vph f)])))
+
+
 (defn update-camera-positions []
   (when-not (or @paused @dragging)
-      (swap! camera-positions (fn [m]
+    (swap! camera-positions (fn [m]
+                              (let [[vth vph] @velocity]
                                 (-> m
-                                    (update :theta + 0.0000002)
-                                    (update :phi + 0.000001))))))
+                                    (update :theta + vth)
+                                    (update :phi + vph)))))))
 
 
 (defn update-camera-positions-continuously []
@@ -35,7 +49,12 @@
     (Thread/sleep 1)))
 
 
-(defn ^:private draw-planet [{:keys [r pos craters]}]
+(defn ^:private draw-planet
+  "
+  Draw individual planet as a sphere in space.  Draw craters but only
+  if display is not updating, since drawing them is slow.
+  "
+  [{:keys [r pos craters]}]
   (with-matrix
     (with-style
       (fill 255)
@@ -44,7 +63,6 @@
       (sphere-detail 30)
       (sphere r)))
 
-  ;; Draw craters
   (when (and @paused (not @dragging))
     (with-style
       (stroke 80)
@@ -88,7 +106,6 @@
 (def ^:private to-render (atom {:spirals true
                                 :text true
                                 :spheres true
-                                :cylinders true
                                 :planets true
                                 :rings true}))
 
@@ -100,46 +117,15 @@
 
 
 (deftoggle spirals)
-(deftoggle cylinders)
 (deftoggle text)
 (deftoggle spheres)
 (deftoggle planets)
 (deftoggle rings)
 
 
-(defn draw-cylinder [{:keys [pos r h rotx roty]}]
-  (with-matrix
-    (translate pos)
-    (rotate-x rotx)
-    (rotate-y roty)
-    (with-style
-      (fill 200 200 200 100)
-      (doseq [[phi1 phi2] (partition 2 1 (range 0 370 10))]
-        (let [phi1 (-> phi1 (* 2 PI) (/ 360))
-              phi2 (-> phi2 (* 2 PI) (/ 360))
-              x1 (* r (cos phi1))
-              y1 (* r (sin phi1))
-              x2 (* r (cos phi2))
-              y2 (* r (sin phi2))]
-          (stroke 180 180 180 50)
-          (with-shape
-            (vertex x1 y1 0)
-            (vertex x2 y2 0)
-            (vertex x2 y2 h)
-            (vertex x1 y1 h)
-            (vertex x1 y1 0))
-          (stroke 0)
-          (line x1 y1 0 x2 y2 0)
-          (line x1 y1 h x2 y2 h))))))
-
-
 (defn render [objects]
   (doseq [{type_ :type :as l} objects]
     (cond
-      (and (= type_ :cylinder)
-           (:cylinders @to-render))
-      (draw-cylinder l)
-
       (and (= type_ :spiral)
            (:spirals @to-render))
       (draw-spiral l)
@@ -162,14 +148,20 @@
 
 
 (defn key-press []
-  (condp = (raw-key)
-    \r (toggle-rings)
-    \s (toggle-spheres)
-    \p (toggle-planets)
-    \t (toggle-text)
-    \q (toggle-spirals)
-    \R (reset-content!)
-    \space (toggle-paused)))
+  (try
+    (condp = (raw-key)
+      \r (toggle-rings)
+      \s (toggle-spheres)
+      \p (toggle-planets)
+      \t (toggle-text)
+      \q (toggle-spirals)
+      \R (reset-content!)
+      \+ (change-velocities-fractionally 1.1)
+      \- (change-velocities-fractionally 0.9)
+      \space (toggle-paused)
+      (println "Unknown key"))
+    (catch Throwable t
+      (prn t))))
 
 
 (defn draw []
