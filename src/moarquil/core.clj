@@ -9,9 +9,6 @@
             [quil.core :refer :all]))
 
 
-
-
-
 ;; Save our app in an atom so we can reset it (only used during
 ;; REPL-driven development)
 (defonce app (atom nil))
@@ -24,6 +21,7 @@
   []
   (let [thisapp (quil.applet/applet
                  :size [1600 1200]
+                 :settings #(smooth 2)
                  :setup setup
                  :draw draw
                  :key-typed key-press

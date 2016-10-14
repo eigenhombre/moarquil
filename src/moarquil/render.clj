@@ -10,7 +10,6 @@
 
 (defn setup []
   (fill 0)
-  (smooth 8)
   (stroke 00))
 
 
