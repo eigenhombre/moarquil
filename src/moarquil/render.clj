@@ -2,6 +2,9 @@
   "
   Functionality for rendering and UI.  Purely math/geometrical
   functions live in `geom.clj`.
+
+  Most functions here are callbacks for the various Quil UI events.
+  See `https://github.com/quil/quil` for the basics.
   "
   (:require [moarquil.geom :refer [content reset-content!]]
             [moarquil.util :refer [with-style with-shape with-matrix]]
@@ -14,9 +17,15 @@
 
 
 (def ^:private dragging (atom false))
+
+
+;; Save and toggle the paused state so we can decide whether to move
+;; the camera or not.
 (def ^:private paused (atom false))
 (defn toggle-paused [] (swap! paused not))
 
+
+;; <em>Camera dynamics</em>
 
 (def ^:private camera-positions (atom {:points-to [0 0 0]
                                        :theta 0
@@ -28,7 +37,11 @@
                                0.0001]))
 
 
-(defn change-velocities-fractionally [f]
+(defn change-velocities-fractionally
+  "
+  Speed up or slow down the camera movement.
+  "
+  [f]
   (let [[vth vph] @velocity]
     (reset! velocity [(* vth f) (* vph f)])))
 
@@ -48,9 +61,11 @@
     (Thread/sleep 1)))
 
 
+;; <em>Methods for drawing individual objects.</em>
+
 (defn ^:private draw-planet
   "
-  Draw individual planet as a sphere in space.  Draw craters but only
+  Draw individual planet as a sphere in space.  Draw craters, but only
   if display is not updating, since drawing them is slow.
   "
   [{:keys [r pos craters]}]
@@ -102,12 +117,16 @@
              (:pos l)))
 
 
+;; Initially, all objects are visible.
 (def ^:private to-render (atom {:spirals true
                                 :text true
                                 :spheres true
                                 :planets true
                                 :rings true}))
 
+
+;; Handle toggle-able objects.  Remove boilerplate in repeated
+;; function definition via a macro.
 
 (defmacro deftoggle [name]
   (let [fn-name (->> name (str "toggle-") symbol)
@@ -122,7 +141,12 @@
 (deftoggle rings)
 
 
-(defn render [objects]
+(defn render
+  "
+  Render all available objects, dispatching on object type.  FIXME:
+  make more compact.
+  "
+  [objects]
   (doseq [{type_ :type :as l} objects]
     (cond
       (and (= type_ :spiral)
@@ -146,7 +170,11 @@
       (draw-planet l))))
 
 
-(defn key-press []
+(defn key-press
+  "
+  Handle any keys pressed; mostly for togging things on and off.
+  "
+  []
   (try
     (condp = (raw-key)
       \r (toggle-rings)
@@ -163,7 +191,13 @@
       (prn t))))
 
 
-(defn draw []
+(defn draw
+  "
+  Based on camera position, show the current view.  Current snapshot
+  of existing objects in the world is provided from the `geom`
+  namespace via the `content` function.
+  "
+  []
   (background 220)
   (let [theta (:theta @camera-positions)
         phi (:phi @camera-positions)
@@ -176,7 +210,11 @@
   (render (content)))
 
 
-(defn mouse-dragged []
+(defn mouse-dragged
+  "
+  Move the camera around when the mouse is dragged and mouse button pressed.
+  "
+  []
   (reset! dragging true)
   (let [delx (- (mouse-x)
                 (pmouse-x))
@@ -190,7 +228,13 @@
 
 (defn mouse-pressed [] (reset! dragging true))
 (defn mouse-released [] (reset! dragging false))
-(defn mouse-wheel [amount]
+
+
+(defn mouse-wheel
+  "
+  Zoom in and out when mouse wheel moves.
+  "
+  [amount]
   (reset! dragging true)
   (future (Thread/sleep 1000)
           (reset! dragging false))

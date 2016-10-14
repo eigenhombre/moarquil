@@ -13,6 +13,7 @@ REPL-driven development)</p>
   []
   (let [thisapp (quil.applet/applet
                  :size [1600 1200]
+                 :settings #(smooth 2)
                  :setup setup
                  :draw draw
                  :key-typed key-press
@@ -37,11 +38,11 @@ how-to-destroy-processing-papplet-without-calling-exit</p>
 
     (-main)))</pre></td></tr><tr><td class="docs"><p>Re-generate Marginalia documentation at will; normally one runs
 <code>lein marg</code>, but doing it at the REPL is much faster.</p>
-</td><td class="codes"><pre class="brush: clojure">(comment)
-(do
-  (require '[marginalia.core :refer [run-marginalia]])
-  (run-marginalia [&quot;src&quot;])
-  (clojure.java.shell/sh &quot;open&quot; &quot;docs/uberdoc.html&quot;))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#moarquil.geom" name="moarquil.geom"><h1 class="project-name">moarquil.geom</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(comment
+  (do
+    (require '[marginalia.core :refer [run-marginalia]])
+    (run-marginalia [&quot;src&quot;])
+    (clojure.java.shell/sh &quot;open&quot; &quot;docs/uberdoc.html&quot;)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#moarquil.geom" name="moarquil.geom"><h1 class="project-name">moarquil.geom</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns moarquil.geom
   (:require [clojure.core.matrix :as m]
             [namejen.names :refer [generic-name]]
@@ -193,24 +194,29 @@ no randomness).</p>
   (reset-planets!)
   (reset-texts!))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#moarquil.render" name="moarquil.render"><h1 class="project-name">moarquil.render</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>  Functionality for rendering and UI.  Purely math/geometrical
   functions live in <code>geom.clj</code>.</p>
+
+<p>  Most functions here are callbacks for the various Quil UI events.
+  See <code>https://github.com/quil/quil</code> for the basics.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns moarquil.render
   (:require [moarquil.geom :refer [content reset-content!]]
             [moarquil.util :refer [with-style with-shape with-matrix]]
             [quil.core :refer :all]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn setup []
   (fill 0)
-  (smooth 8)
   (stroke 00))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def ^:private dragging (atom false))
-(def ^:private paused (atom false))
-(defn toggle-paused [] (swap! paused not))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:private dragging (atom false))</pre></td></tr><tr><td class="docs"><p>Save and toggle the paused state so we can decide whether to move
+the camera or not.</p>
+</td><td class="codes"><pre class="brush: clojure">(def ^:private paused (atom false))
+(defn toggle-paused [] (swap! paused not))</pre></td></tr><tr><td class="docs"><p><em>Camera dynamics</em></p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def ^:private camera-positions (atom {:points-to [0 0 0]
                                        :theta 0
                                        :phi 0
                                        :r 1000}))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def ^:private velocity (atom [0.00002
-                               0.0001]))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn change-velocities-fractionally [f]
+                               0.0001]))</pre></td></tr><tr><td class="docs"><p>  Speed up or slow down the camera movement.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn change-velocities-fractionally
+  [f]
   (let [[vth vph] @velocity]
     (reset! velocity [(* vth f) (* vph f)])))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn update-camera-positions []
@@ -223,7 +229,8 @@ no randomness).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn update-camera-positions-continuously []
   (while true
     (update-camera-positions)
-    (Thread/sleep 1)))</pre></td></tr><tr><td class="docs"><p>  Draw individual planet as a sphere in space.  Draw craters but only
+    (Thread/sleep 1)))</pre></td></tr><tr><td class="docs"><p><em>Methods for drawing individual objects.</em></p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>  Draw individual planet as a sphere in space.  Draw craters but only
   if display is not updating, since drawing them is slow.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn ^:private draw-planet
   [{:keys [r pos craters]}]
@@ -263,12 +270,14 @@ no randomness).</p>
       (apply line p))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn ^:private draw-text [l]
   (apply (partial text (:txt l))
-             (:pos l)))</pre></td></tr><tr><td class="docs">
+             (:pos l)))</pre></td></tr><tr><td class="docs"><p>Initially, all objects are visible.</p>
 </td><td class="codes"><pre class="brush: clojure">(def ^:private to-render (atom {:spirals true
                                 :text true
                                 :spheres true
                                 :planets true
-                                :rings true}))</pre></td></tr><tr><td class="docs">
+                                :rings true}))</pre></td></tr><tr><td class="docs"><p>Handle toggle-able objects.  Remove boilerplate in repeated
+function definition via a macro.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro deftoggle [name]
   (let [fn-name (-&gt;&gt; name (str &quot;toggle-&quot;) symbol)
         kw (keyword name)]
@@ -277,8 +286,10 @@ no randomness).</p>
 (deftoggle text)
 (deftoggle spheres)
 (deftoggle planets)
-(deftoggle rings)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn render [objects]
+(deftoggle rings)</pre></td></tr><tr><td class="docs"><p>  Render all available objects, dispatching on object type.  FIXME:
+  make more compact.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn render
+  [objects]
   (doseq [{type_ :type :as l} objects]
     (cond
       (and (= type_ :spiral)
@@ -295,8 +306,9 @@ no randomness).</p>
       (draw-ring l)
       (and (= type_ :planet)
            (:planets @to-render))
-      (draw-planet l))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn key-press []
+      (draw-planet l))))</pre></td></tr><tr><td class="docs"><p>  Handle any keys pressed; mostly for togging things on and off.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn key-press
+  []
   (try
     (condp = (raw-key)
       \r (toggle-rings)
@@ -310,8 +322,11 @@ no randomness).</p>
       \space (toggle-paused)
       (println &quot;Unknown key&quot;))
     (catch Throwable t
-      (prn t))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn draw []
+      (prn t))))</pre></td></tr><tr><td class="docs"><p>  Based on camera position, show the current view.  Current snapshot
+  of existing objects in the world is provided from the <code>geom</code>
+  namespace via the <code>content</code> function.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn draw
+  []
   (background 220)
   (let [theta (:theta @camera-positions)
         phi (:phi @camera-positions)
@@ -321,8 +336,9 @@ no randomness).</p>
             (* r (Math/cos theta))
             0 0 0
             0 1 1))
-  (render (content)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn mouse-dragged []
+  (render (content)))</pre></td></tr><tr><td class="docs"><p>  Move the camera around when the mouse is dragged and mouse button pressed.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn mouse-dragged
+  []
   (reset! dragging true)
   (let [delx (- (mouse-x)
                 (pmouse-x))
@@ -333,8 +349,9 @@ no randomness).</p>
     (swap! camera-positions update :phi - (radians mdx))
     (swap! camera-positions update :theta + (radians mdy))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn mouse-pressed [] (reset! dragging true))
-(defn mouse-released [] (reset! dragging false))
-(defn mouse-wheel [amount]
+(defn mouse-released [] (reset! dragging false))</pre></td></tr><tr><td class="docs"><p>  Zoom in and out when mouse wheel moves.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn mouse-wheel
+  [amount]
   (reset! dragging true)
   (future (Thread/sleep 1000)
           (reset! dragging false))
