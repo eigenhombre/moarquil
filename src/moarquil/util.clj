@@ -1,4 +1,7 @@
 (ns moarquil.util
+  "
+  Utilities namespace.
+  "
   (:require [quil.core :refer :all]))
 
 

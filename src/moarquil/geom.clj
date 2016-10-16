@@ -1,4 +1,8 @@
 (ns moarquil.geom
+  "
+  This is the namespace for math-y things and for defining the objects
+  in the \"universe\", without worrying about how they are rendered.
+  "
   (:require [clojure.core.matrix :as m]
             [namejen.names :refer [generic-name]]
             [quil.core :refer :all]
@@ -12,6 +16,9 @@
   Generate a mysterious cloud of names distributed randomly throughout
   a spherical volume, most of them close to origin (exponential
   falloff).
+
+  Are they names of ships?  Of lost artifacts adrift in space?
+  Asteroids?  Only you can decide.
   "
   []
   (repeatedly
@@ -27,7 +34,7 @@
               (* r (Math/cos th))]}))))
 
 
-;; Store state of names and allow it to be resettable
+;; Store state of names and allow it to be resettable.
 (def ^:private texts (atom (texts*)))
 (defn reset-texts! [] (reset! texts (texts*)))
 
@@ -40,7 +47,8 @@
   "
   []
   (let [max-pos 800
-        positions (->> (repeatedly 50 (partial rand-int max-pos))
+        positions (->> (partial rand-int max-pos)
+                       (repeatedly 50)
                        (map (partial + (/ max-pos (- 2))))
                        (partition 3))]
     (for [pos positions]
@@ -99,7 +107,8 @@
 
 (defn ^:private gen-planet
   "
-  Generate planet object, including surface craters.
+  Generate planet object, including surface craters provided by
+  `crater-points`.
   "
   []
   (let [max-pos 1200
@@ -115,12 +124,12 @@
 
 
 (defn ^:private planets*
-  "Generate 4 to 8 planets"
+  "Generate 4 to 8 planets."
   []
   (repeatedly (+ 4 (rand-int 5)) gen-planet))
 
 
-;; Save planet state and allow it to be resettable
+;; Save planet state and allow it to be resettable.
 (def ^:private planets (atom (planets*)))
 (defn reset-planets! [] (reset! planets (planets*)))
 
@@ -130,7 +139,7 @@
 (defn ^:private gen-ring
   "
   Generate a bunch of \"rock\" positions spread throughout a ring
-  shape.
+  shape (random positions spread out in between two radii).
   "
   [pos r1 r2 dr rotx color]
   (let [points

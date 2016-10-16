@@ -1,7 +1,8 @@
 (ns moarquil.render
   "
-  Functionality for rendering and UI.  Purely math/geometrical
-  functions live in `geom.clj`.
+  This namespace provides functionality for rendering and user
+  interaction, based on the purely mathematical objects provided by
+  `geom.clj`.
 
   Most functions here are callbacks for the various Quil UI events.
   See `https://github.com/quil/quil` for the basics.
@@ -11,11 +12,14 @@
             [quil.core :refer :all]))
 
 
+;; General Quil drawing parameters.
 (defn setup []
   (fill 0)
   (stroke 00))
 
 
+;; Keep track of when we're dragging the mouse, so we can stop
+;; animation at that time.
 (def ^:private dragging (atom false))
 
 
@@ -27,12 +31,14 @@
 
 ;; <em>Camera dynamics</em>
 
+;; Store camera info, including current position and orientation.
 (def ^:private camera-positions (atom {:points-to [0 0 0]
                                        :theta 0
                                        :phi 0
                                        :r 1000}))
 
 
+;; Camera is also moving with some initial theta, phi velocity.
 (def ^:private velocity (atom [0.00002
                                0.0001]))
 
@@ -55,7 +61,12 @@
                                     (update :phi + vph)))))))
 
 
-(defn update-camera-positions-continuously []
+(defn update-camera-positions-continuously
+  "
+  Basically, we always want to update where the camera is, unless
+  we're dragging the mouse or the user has paused the movement.
+  "
+  []
   (while true
     (update-camera-positions)
     (Thread/sleep 1)))
@@ -125,10 +136,12 @@
                                 :rings true}))
 
 
-;; Handle toggle-able objects.  Remove boilerplate in repeated
-;; function definition via a macro.
-
-(defmacro deftoggle [name]
+(defmacro deftoggle
+  "
+  Handle toggle-able objects.  This got fairly repetetive so I
+  replaced the repeated boilerplate with this macro.
+  "
+  [name]
   (let [fn-name (->> name (str "toggle-") symbol)
         kw (keyword name)]
     `(defn ~fn-name [] (swap! to-render update ~kw not))))
@@ -143,8 +156,7 @@
 
 (defn render
   "
-  Render all available objects, dispatching on object type.  FIXME:
-  make more compact.
+  Render all available objects, dispatching on object type.
   "
   [objects]
   (doseq [{type_ :type :as l} objects]
@@ -172,7 +184,7 @@
 
 (defn key-press
   "
-  Handle any keys pressed; mostly for togging things on and off.
+  Handle any keys pressed; mostly for toggling things on and off.
   "
   []
   (try
