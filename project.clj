@@ -2,7 +2,7 @@
   :description ""
   :main moarquil.core
   :url "https://github.com/eigenhombre/moarquil"
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.10.0"]
                  [quil "2.3.0-SNAPSHOT"]
                  [eigenhombre/namejen "0.1.11"]
                  [net.mikera/core.matrix "0.43.0"]]

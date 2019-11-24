@@ -4,10 +4,10 @@
   in the \"universe\", without worrying about how they are rendered.
   "
   (:require [clojure.core.matrix :as m]
-            [namejen.names :refer [generic-name]]
-            [quil.core :refer :all]
-            [quil.helpers.drawing :refer [line-join-points]]))
+            [namejen.names :as nom]))
 
+
+(set! *warn-on-reflection* true)
 
 ;; <em>Text Names</em>
 
@@ -28,7 +28,7 @@
            th (* (rand) Math/PI)
            ph (* 2 (rand) Math/PI)]
        {:type :text
-        :txt (generic-name)
+        :txt (nom/generic-name)
         :pos [(* r (Math/cos th) (Math/sin ph))
               (* r (Math/sin th) (Math/sin ph))
               (* r (Math/cos th))]}))))
@@ -76,7 +76,7 @@
   [planet-radius
    planet-pos
    crater-radius]
-  (let [[theta phi] [(rand PI) (rand (* 2 PI))] ;; crater angles
+  (let [[theta phi] [(rand Math/PI) (rand (* 2 Math/PI))] ;; crater angles
         [x y z] planet-pos
         ;; Translate by postition of world:
         tm' (m/matrix [[1 0 0 x]
@@ -84,22 +84,22 @@
                        [0 0 1 z]
                        [0 0 0 1]])
         ;; Rotate around z by phi:
-        rz' (m/matrix [[(cos phi) (- (sin phi)) 0 0]
-                       [(sin phi) (cos phi)     0 0]
+        rz' (m/matrix [[(Math/cos phi) (- (Math/sin phi)) 0 0]
+                       [(Math/sin phi) (Math/cos phi)     0 0]
                        [0         0             1 0]
                        [0         0             0 1]])
         ;; Rotate around y by theta:
-        ry' (m/matrix [[(cos theta)     0 (sin theta) 0]
+        ry' (m/matrix [[(Math/cos theta)     0 (Math/sin theta) 0]
                        [0               1 0           0]
-                       [(- (sin theta)) 0 (cos theta) 0]
+                       [(- (Math/sin theta)) 0 (Math/cos theta) 0]
                        [0               0 0           1]])
         txform (m/mmul tm'
                        rz'
                        ry')]
     (for [_ (range 100)]
-      (let [eta (rand (* 2 PI))
-            v (m/matrix [(* crater-radius (cos eta))
-                         (* crater-radius (sin eta))
+      (let [eta (rand (* 2 Math/PI))
+            v (m/matrix [(* crater-radius (Math/cos eta))
+                         (* crater-radius (Math/sin eta))
                          planet-radius
                          1])]
         (butlast (m/mmul txform v))))))
@@ -145,8 +145,8 @@
   (let [points
         (for [_ (range 10000)]
           (let [r (+ r1 (rand (- r2 r1)))
-                theta (rand (* 2 PI))]
-            [(* r (cos theta)), (* r (sin theta)), 0]))]
+                theta (rand (* 2 Math/PI))]
+            [(* r (Math/cos theta)), (* r (Math/sin theta)), 0]))]
     {:type :ring
      :pos pos
      :r1 r1
@@ -170,6 +170,15 @@
 
 ;; <em>Cosmic Spirals</em>
 
+;; FIXME: from quil, make better:
+(defn line-join-points [interleaved-points]
+  (lazy-seq
+   (let [head (take 2 interleaved-points)]
+     (if (= 2 (count head))
+       (cons (apply concat head) (line-join-points (drop 1 interleaved-points)))))))
+
+(defn radians [deg] (* deg (/ Math/PI 180)))
+
 (defn ^:private gen-spiral
   "
   Generate spiral as a series of line segments with fixed radius on a
@@ -181,11 +190,10 @@
      (let [s (* t 100)
            radian-s (radians s)
            radian-t (radians t)
-           x (* radius  (cos radian-s) (sin radian-t))
-           y (* radius  (sin radian-s) (sin radian-t))
-           z (* radius (cos radian-t))]
+           x (* radius  (Math/cos radian-s) (Math/sin radian-t))
+           y (* radius  (Math/sin radian-s) (Math/sin radian-t))
+           z (* radius (Math/cos radian-t))]
        [x y z]))))
-
 
 ;; Do five spirals of different radii.  Not resettable (since there is
 ;; no randomness).
@@ -198,7 +206,33 @@
     {:type :spiral
      :points (gen-spiral r)}))
 
+(defn ^:private gooey-boxes [n]
+  (loop [boxes [{:type :box
+                 :coords [0 0 0]}]
+         n n]
+    (if (zero? n)
+      (distinct boxes)
+      (let [{:keys [coords]} (last boxes)
+            rand-index (rand-int 3)
+            new-coords (update coords
+                               rand-index
+                               (partial + (rand-nth [-10 10])))]
+        (recur (conj boxes {:type :box
+                            :coords new-coords})
+               (dec n))))))
 
+(defn ^:private boxes* []
+  (let [box-region-size 1000
+        coord-fn (fn [] (- (/ box-region-size 2)
+                           (rand-int box-region-size)))]
+    (repeatedly 1000
+                (fn [] {:type :box
+                        :coords [(coord-fn)
+                                 (coord-fn)
+                                 (coord-fn)]}))))
+
+(def ^:private boxes (atom (gooey-boxes 3000)))
+;;(def ^:private boxes (atom (boxes*)))
 ;; <em>Public functions, for rendering and resetting everything.</em>
 
 (defn content
@@ -211,7 +245,8 @@
    @rings
    @planets
    @texts
-   spirals))
+   spirals
+   @boxes))
 
 
 (defn reset-content!

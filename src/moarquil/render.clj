@@ -11,6 +11,7 @@
             [moarquil.util :refer [with-style with-shape with-matrix]]
             [quil.core :refer :all]))
 
+(set! *warn-on-reflection* true)
 
 ;; General Quil drawing parameters.
 (defn setup []
@@ -25,17 +26,17 @@
 
 ;; Save and toggle the paused state so we can decide whether to move
 ;; the camera or not.
-(def ^:private paused (atom false))
+(def ^:private paused (atom true))
 (defn toggle-paused [] (swap! paused not))
 
 
 ;; <em>Camera dynamics</em>
 
 ;; Store camera info, including current position and orientation.
-(def ^:private camera-positions (atom {:points-to [0 0 0]
-                                       :theta 0
-                                       :phi 0
-                                       :r 1000}))
+(defonce ^:private camera-positions (atom {:points-to [0 0 0]
+                                           :theta 0
+                                           :phi 0
+                                           :r 1000}))
 
 
 ;; Camera is also moving with some initial theta, phi velocity.
@@ -125,15 +126,99 @@
 
 (defn ^:private draw-text [l]
   (apply (partial text (:txt l))
-             (:pos l)))
+         (:pos l)))
 
+(defn square->triangle
+  "
+  (square->triangle [[0 0 0]
+                   [0 0 100]
+                   [0 100 100]
+                   [0 100 0]])
+  ;;=>
+  '([0 0 0]
+    [0 0 100]
+    [0 100 100]
+    [0 0 100]
+    [0 100 100]
+    [0 100 0])"
+  [squarepoints]
+  (concat (take 3 squarepoints)
+          (drop 1 squarepoints)))
 
-;; Initially, all objects are visible.
+(def squarepoints [[[-1 -1 -1]
+                    [-1 1 -1]
+                    [1 1 -1]
+                    [1 -1 -1]]
+                   [[-1 -1 1]
+                    [-1 1 1]
+                    [1 1 1]
+                    [1 -1 1]]
+                   [[-1 -1 -1]
+                    [-1 -1 1]
+                    [1 -1 1]
+                    [1 -1 -1]]
+                   [[-1 1 -1]
+                    [-1 1 1]
+                    [1 1 1]
+                    [1 1 -1]]
+                   [[-1 -1 -1]
+                    [-1 -1 1]
+                    [-1 1 1]
+                    [-1 1 -1]]
+                   [[1 -1 -1]
+                    [1 -1 1]
+                    [1 1 1]
+                    [1 1 -1]]])
+
+(defn cubesquares [offset width]
+  (for [sq squarepoints]
+    (for [p sq]
+      (map +
+           offset
+           (map (partial * (/ width 2)) p)))))
+
+(defn draw-faces [origin faces]
+  (fill 100)
+  (stroke 50)
+  (with-matrix
+    (apply translate origin)
+    (doseq [face faces]
+      (begin-shape)
+      (doseq [p face]
+        (apply vertex p))
+      (end-shape :close))))
+
+(defn merge-shapes [faces]
+  (set faces)
+  #_(doseq [[i f1] (map-indexed vector faces)
+            [j f2] (map-indexed vector faces)]
+      (if (< (rand-int 100000) 2)
+        (if (and (not= i j) (= f1 f2))
+          (println i j f1))))
+  #_faces)
+
+(def testshape
+  (merge-shapes (concat (cubesquares [0 0 0] 300)
+                        (cubesquares [300 0 0] 300))))
+
+(defn draw-box-ll [coords width]
+  (draw-faces coords (cubesquares [0 0 0] width)))
+
+(defn ^:private draw-box [{:keys [coords] :as l}]
+  ;;(draw-faces [0 0 0] testshape)
+  (draw-box-ll coords 10)
+  #_(with-matrix
+      (apply translate coords)
+      (fill 100)
+      (stroke 30)
+      (box 10)))
+
 (def ^:private to-render (atom {:spirals true
-                                :text true
-                                :spheres true
-                                :planets true
-                                :rings true}))
+                                :text false
+                                :spheres false
+                                :planets false
+                                :rings true
+                                :boxes true}))
 
 
 (defmacro deftoggle
@@ -152,6 +237,7 @@
 (deftoggle spheres)
 (deftoggle planets)
 (deftoggle rings)
+(deftoggle boxes)
 
 
 (defn render
@@ -179,7 +265,11 @@
 
       (and (= type_ :planet)
            (:planets @to-render))
-      (draw-planet l))))
+      (draw-planet l)
+
+      (and (= type_ :box)
+           (:boxes @to-render))
+      (draw-box l))))
 
 
 (defn key-press
@@ -220,7 +310,6 @@
             0 0 0
             0 1 1))
   (render (content)))
-
 
 (defn mouse-dragged
   "

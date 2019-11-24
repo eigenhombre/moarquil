@@ -37,7 +37,7 @@
   "
   []
   (let [thisapp (quil.applet/applet
-                 :size [1600 1200]
+                 :size [1200 800]
                  :settings #(smooth 2)
                  :setup setup
                  :draw draw
@@ -66,7 +66,10 @@
       (.setVisible (.frame @app) false)
       (reset! app nil))
 
-    (-main)))
+    (-main))
+
+
+  )
 
 
 ;; Re-generate Marginalia documentation at will; normally one runs
